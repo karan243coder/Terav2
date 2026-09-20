@@ -75,7 +75,7 @@ RATE_LIMIT_SEC = int(os.environ.get("RATE_LIMIT_SEC", "60"))
 CONCURRENCY = int(os.environ.get("CONCURRENCY", "3"))
 BOT_NAME = os.environ.get("BOT_NAME", "TeraBox Downloader Bot")
 HEALTH_PORT = int(os.environ.get("HEALTH_PORT", "8080"))
-VERSION = "2.0"
+VERSION = "2.1"
 
 if TERABOX_COOKIE:
     MODE = "ndus cookie (direct CDN)"
@@ -262,7 +262,7 @@ async def safe_edit(msg: Message | None, text: str, tries: int = 3) -> bool:
     for _ in range(tries):
         try:
             async with EDIT_LOCK:
-                await msg.edit_text(text, disable_notification=True)
+                await msg.edit_text(text)
             return True
         except FloodWait as e:
             global FLOODWAIT_SLEEPED
@@ -343,7 +343,7 @@ def start_health_server(port: int) -> None:
 @app.on_message(filters.command(["start", "help"]))
 async def cmd_start(app_, msg: Message):
     try:
-        await msg.reply_text(HELP_TEXT, parse_mode="markdown")
+        await msg.reply_text(HELP_TEXT, parse_mode=ParseMode.MARKDOWN)
     except FloodWait as e:
         await asyncio.sleep(e.value + 1)
     except RPCError:
@@ -384,7 +384,7 @@ async def cmd_stats(app_, msg: Message):
             f"⚙️ Concurrency: {CONCURRENCY} | Rate limit: {RATE_LIMIT_SEC}s\n"
             f"💤 FloodWait sleeps (total): {fmt_dur(FLOODWAIT_SLEEPED)}\n"
             f"❤️ Health: port {HEALTH_PORT} (/healthz)",
-            parse_mode="markdown",
+            parse_mode=ParseMode.MARKDOWN,
         )
     except (FloodWait, RPCError):
         pass
@@ -479,7 +479,6 @@ async def on_link(app_, msg: Message):
                         f"📂 This share has {len(non_dir)} files — which one do you want? (full quality)\n\n"
                         "⚠️ Buttons stay valid for 15 minutes.",
                         reply_markup=kb,
-                        disable_notification=True,
                     )
             except (FloodWait, RPCError):
                 pass
@@ -584,7 +583,7 @@ async def _deliver(status: Message, user, url: str, f, from_button: bool = False
             "📤 Uploading to Telegram — this shows live progress too...",
         )
         try:
-            await status.chat.send_action(ChatAction.UPLOAD_DOCUMENT)
+            await app.send_chat_action(status.chat.id, ChatAction.UPLOAD_DOCUMENT)
         except RPCError:
             pass
 
@@ -608,8 +607,7 @@ async def _deliver(status: Message, user, url: str, f, from_button: bool = False
         last_err = None
         for attempt in range(2):  # FloodWait → sleep + one retry
             try:
-                sent = await status.chat.send_document(
-                    status.chat.id,
+                sent = await status.reply_document(
                     str(dest),
                     caption=caption[:1024],
                     progress=up_cb,
