@@ -343,7 +343,7 @@ def start_health_server(port: int) -> None:
 @app.on_message(filters.command(["start", "help"]))
 async def cmd_start(app_, msg: Message):
     try:
-        await msg.reply_markdown(HELP_TEXT)
+        await msg.reply_text(HELP_TEXT, parse_mode="markdown")
     except FloodWait as e:
         await asyncio.sleep(e.value + 1)
     except RPCError:
@@ -400,7 +400,7 @@ def _dl_worker(url: str, fs_id: str, dest: str, prog):
     return _dl_tb.download(src.url, dest, headers=src.headers, progress_cb=prog)
 
 
-@app.on_message(filters.private & URL_RE)
+@app.on_message(filters.private & filters.regex(URL_RE))
 async def on_link(app_, msg: Message):
     user = msg.from_user
     if not is_allowed(user.id):
