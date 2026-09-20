@@ -1,0 +1,18 @@
+# /etc/systemd/system/terabox-bot.service
+# (VPS par systemd se chalane ke liye)
+[Unit]
+Description=TeraBox Downloader Telegram Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# ── yahan apna path daalo ──
+WorkingDirectory=/home/user/terabox-bot
+ExecStart=/home/user/terabox-bot/venv/bin/python bot.py
+Restart=always
+RestartSec=5
+User=user
+
+[Install]
+WantedBy=multi-user.target

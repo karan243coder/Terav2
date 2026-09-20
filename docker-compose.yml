@@ -1,0 +1,8 @@
+services:
+  terabox-bot:
+    build: .
+    container_name: terabox-bot
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - ./downloads:/bot/downloads
